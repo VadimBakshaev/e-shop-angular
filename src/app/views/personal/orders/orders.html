@@ -1,0 +1,41 @@
+<section class="orders">
+    <div class="container">
+        <h2 class="personal-title">Личный кабинет</h2>
+        <div class="personal-page-selector">
+            <div class="personal-page" routerLink="/profile">Личные данные</div>
+            <div class="personal-page active">Ваши заказы</div>
+        </div>
+        <h5 class="orders-title">Ваши заказы</h5>
+        <p class="orders-additional">Здесь отображается история ваших заказов.</p>
+        @if (orders() && orders().length > 0) {
+        <div class="orders-list">
+            @for (order of orders(); track $index; let i = $index) {
+            <div class="orders-list-item">
+                <div class="orders-list-item-number">Заказ №{{i + 1}}</div>
+                <div class="orders-list-item-products">
+                    <div class="orders-list-item-products-count">Кол-во товаров: {{order.items?.length}}</div>
+                    <table class="orders-list-item-products-list">
+                        @for (item of order.items; track $index) {
+                        <tr>
+                            <td>&#183; {{item.name}}</td>
+                            <td>{{item.quantity}} шт.</td>
+                        </tr>
+                        }
+                    </table>
+                </div>
+                <div class="orders-list-item-status" [style.border-color]="order?.statusColor"
+                    [style.color]="order?.statusColor">
+                    {{order?.statusName}}
+                </div>
+                <div class="orders-list-item-price">{{order.totalAmount}} BYN</div>
+            </div>
+            }
+        </div>
+        } @else {
+        <div class="orders-empty">
+            <h2 class="orders-empty-text">У Вас еще нет заказов</h2>
+            <button class="btn" routerLink="/catalog">В каталог</button>
+        </div>
+        }
+    </div>
+</section>

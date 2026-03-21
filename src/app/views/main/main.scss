@@ -1,0 +1,259 @@
+@use 'global'as *;
+
+.main {
+    background-image: url('../../../assets/images/bg_main.jpg');
+    background-repeat: no-repeat;
+    background-position-x: calc(50% + 210px);
+    background-position-y: bottom;
+    padding-top: 58px;
+    padding-bottom: 231px;
+}
+
+.main-present-title {
+    font-family: "Lora", sans-serif;
+    font-weight: 400;
+    font-size: 60px;
+    line-height: 130%;
+    color: #2a592e;
+    margin-bottom: 67px;
+}
+
+.main-present-text {
+    font-size: 18px;
+    line-height: 140%;
+    color: $green-text-color;
+    max-width: 528px;
+}
+
+.offers {
+    background-color: #a4cba3;
+    padding-block: 80px;
+
+    .container {
+        display: flex;
+        justify-content: space-between;
+    }
+}
+
+.offer {
+    width: 600px;
+    height: 250px;
+    padding: 35px 35px 0 35px;
+    background-color: white;
+    border-radius: 5px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+
+    &.offer-insta {
+        gap: 16px;
+    }
+
+    .btn {
+        font-size: 18px;
+        color: white;
+    }
+}
+
+.offer-title {
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 130%;
+    color: $green-text-color;
+}
+
+.offer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    flex: 1;
+}
+
+.offer-image {
+    display: flex;
+}
+
+.offer-inner-content {
+    flex: 1;
+    align-self: start;
+
+    .offer-button {
+        margin-top: 30px;
+    }
+}
+
+.offer-text {
+    max-width: 234px;
+    font-size: 16px;
+    line-height: 130%;
+    color: $green-text-color;
+}
+
+.offer-button {
+    text-align: end;
+}
+
+.offer-insta {
+    .offer-content {
+        gap: 58px;
+    }
+
+    .btn {
+        width: 228px;
+    }
+}
+
+.offer-collection {
+    .offer-title {
+        max-width: 400px;
+    }
+
+    .offer-content {
+        gap: 45px;
+        align-items: center;
+
+        .offer-image {
+            flex: 1;
+            justify-content: end;
+        }
+
+        .offer-button {
+            align-self: end;
+            margin-bottom: 35px;
+
+            .btn {
+                width: 177px;
+            }
+        }
+    }
+}
+
+.best-products {
+    padding-top: 120px;
+    padding-bottom: 130px;
+}
+
+.info {
+    background-color: #a4cba3;
+    background-image: url('../../../assets/images/bg_info.jpg');
+    background-repeat: no-repeat;
+    background-position-x: calc(50% + 340px);
+    padding-block: 80px;
+}
+
+.info-title {
+    @include head-lora-green(32px);
+    padding-bottom: 5px;
+}
+
+.info-item {
+    margin-top: 35px;
+    color: black;
+    max-width: 442px;
+}
+
+.info-image {
+    margin-bottom: 30px;
+}
+
+.info-text {
+    font-size: 16px;
+
+    .info-text-extra {
+        font-family: "Montserrat", sans-serif;
+        font-style: italic;
+        font-weight: 300;
+        line-height: 130%;
+    }
+}
+
+.info-delivery {
+
+    .info-text:last-child {
+        margin-top: 16px;
+    }
+
+    .info-text-main {
+        margin-bottom: 8px;
+    }
+}
+
+.info-payment {
+    .info-text {
+        margin-bottom: 10px;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+}
+
+.reviews {
+    padding-block: 130px;
+}
+
+.reviews-title {
+    @include head-lora-green(32px);
+    margin-bottom: 50px;
+    text-align: center;
+}
+
+.reviews-carousel {
+    position: relative;
+}
+
+.reviews-carousel-arrows {
+
+    a {
+        position: absolute;
+        cursor: pointer;
+        top: calc(50% - 5px);
+    }
+
+    .move-backward {
+        left: -25px;
+    }
+
+    .move-forward {
+        right: -25px;
+    }
+}
+
+.review-item {
+    width: 396px;
+    height: 267px;
+    border: 2px solid #2A592E;
+    border-radius: 10px;
+    box-sizing: border-box;
+    padding: 30px;
+}
+
+.review-item-head {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    gap: 26px;
+
+    .rewiew-item-img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+    }
+}
+
+.review-item-name {
+    font-weight: 600;
+    font-size: 16px;
+    color: $green-text-color;
+}
+
+.review-item-text {
+    margin-top: 15px;
+    font-size: 16px;
+    line-height: 140%;
+    color: $gray-text-color;
+}
+
+.map iframe {
+    vertical-align: bottom;
+}

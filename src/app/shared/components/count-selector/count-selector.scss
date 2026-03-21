@@ -1,0 +1,15 @@
+.count-selector {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    user-select: none;
+
+    .increment,
+    .decrement {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+}

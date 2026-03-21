@@ -1,0 +1,93 @@
+@use 'global'as *;
+@use 'data-form' as *;
+
+.order {
+    padding-top: 86px;
+    padding-bottom: 107px;
+}
+
+.order-title {
+    @include head-lora-green(32px);
+    margin-bottom: 30px;
+}
+
+.order-info {
+    display: flex;
+    gap: 90px;
+}
+
+.order-details {
+    width: 422px;
+
+    .btn {
+        width: 100%;
+    }
+}
+
+.order-datails-info {
+    padding: 40px;
+    border-radius: 5px;
+    background-color: #e7f1e8;
+    margin-bottom: 14px;
+}
+
+.order-details-info-title {
+    @include head-lora-green(26px);
+    margin-bottom: 20px;
+}
+
+.order-details-info-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+
+    &:last-child {
+        margin-bottom: 0;
+
+        .order-details-info-item-head,
+        .order-details-info-item-body {
+            font-weight: 600;
+        }
+    }
+}
+
+.order-details-info-item-head {
+    color: $gray-text-color;
+}
+
+.order-details-info-item-body {
+    color: $gray-text-color;
+    font-weight: 500;
+    font-size: 20px;
+}
+
+.order-popup{
+    border-radius: 10px;
+    padding: 100px 70px 219px;
+    text-align: center;
+    position: relative;
+    background-image: url('../../../../assets/images/popup-img.jpg');
+    background-position: bottom center;
+    background-repeat: no-repeat;
+    background-color: white;
+}
+
+.order-popup-close{
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    cursor: pointer;
+}
+
+.order-popup-title{
+    @include head-lora-green(32px);
+    margin-bottom: 40px;    
+}
+
+.order-popup-text{
+    font-size: 20px;
+    color: $green-text-color; 
+    margin-bottom: 5px;   
+}
+

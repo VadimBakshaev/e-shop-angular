@@ -1,0 +1,13 @@
+@use 'global'as *;
+@use 'data-form'as *;
+
+.info {
+    padding-top: 50px;
+    padding-bottom: 128px;
+    background-image: url('../../../../assets/images/bg_main.jpg');
+    background-repeat: no-repeat;
+    background-position-x: calc(50% + 210px);
+    background-position-y: bottom;
+}
+
+

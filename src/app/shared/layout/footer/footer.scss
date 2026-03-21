@@ -1,0 +1,71 @@
+@use 'global'as *;
+
+.footer {
+    padding-top: 39px;
+    padding-bottom: 35px;
+    background-color: #648F64;
+}
+
+.container {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 35px;
+}
+
+.footer-block {
+    margin-top: 11px;
+}
+
+.footer-head {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    color: $gray-text-color;
+    margin-bottom: 25px;
+}
+
+.footer-items {
+    ul {
+        list-style: none;
+        padding-left: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 11px;
+
+        a {
+            text-decoration: none;
+            color: $gray-text-color;
+            font-size: 16px;
+        }
+    }
+}
+
+.footer-scial-icons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 55px;
+}
+
+.footer-payment {
+    display: grid;
+    grid-template-columns: repeat(3, 70px);
+    gap: 10px;
+    max-width: 230px;
+}
+
+.footer-contacts {
+    max-width: 253px;
+}
+
+.footer-contact-head {
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: $gray-text-color;
+}
+
+.footer-contact-info {
+    margin-bottom: 15px;
+    color: $gray-text-color;
+}

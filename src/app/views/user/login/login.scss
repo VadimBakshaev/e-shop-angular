@@ -1,0 +1,13 @@
+@use 'auth-form'as *;
+
+.login {
+    .container {
+        display: flex;
+    }
+}
+
+.page-image {
+    display: flex;
+    justify-content: center;    
+    width: -webkit-fill-available;
+}

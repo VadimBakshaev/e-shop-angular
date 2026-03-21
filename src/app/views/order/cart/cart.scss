@@ -1,0 +1,136 @@
+@use 'global'as *;
+
+.cart {
+    padding-top: 50px;
+    padding-bottom: 110px;
+}
+
+.cart-title {
+    @include head-lora-black(36px);
+    margin-bottom: 35px;
+}
+
+.cart-info {
+    display: flex;
+    justify-content: space-between;
+    gap: 60px;
+    margin-bottom: 160px;
+}
+
+.cart-products {
+    width: 678px;
+}
+
+.cart-product {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid #ebebeb;
+    padding-top: 20px;
+    margin-top: 20px;
+    gap: 25px;
+
+    &:first-child {
+        padding-top: 0;
+        margin-top: 0;
+        border-top: 0;
+    }
+}
+
+.cart-product-image {
+    background-size: cover;
+    background-position: center;
+    border-radius: 5px;
+    width: 80px;
+    height: 80px;    
+}
+
+.cart-product-name {
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 130%;
+    color: $green-text-color;
+    width: 233px;
+}
+
+.cart-product-price {
+    font-weight: 600;
+    font-size: 18px;
+    color: $gray-text-color;
+}
+
+.cart-product-remove {
+    cursor: pointer;
+    margin-right: 15px;
+}
+
+.cart-details {
+    width: 500px;
+}
+
+.cart-details-info {
+    background-color: #e7f1e8;
+    border-radius: 5px;
+    padding: 40px;
+    margin-bottom: 12px;
+}
+
+.cart-details-info-title {
+    @include head-lora-green(26px);
+    margin-bottom: 20px;
+}
+
+.cart-details-info-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+
+    &.last {
+        margin-bottom: 5px;
+    }
+}
+
+.cart-details-info-item-head {
+    font-size: 16px;
+    color: $gray-text-color;
+}
+
+.cart-details-info-item-body {
+    font-weight: 500;
+    font-size: 20px;
+    color: $gray-text-color;
+}
+
+.cart-detailsa-info-comment {
+    font-style: italic;
+    font-weight: 300;
+    font-size: 14px;
+    color: $gray-text-color;
+}
+
+.cart-details-action {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .btn {
+        width: 100%;
+        font-size: 18px;
+    }
+
+    .btn-transparent {
+        color: #6cac72;
+    }
+}
+
+.cart-empty{
+    padding-block: 20px 100px;
+    .cart-empty-text{
+        font-size: 16px;
+        margin-bottom: 20px;
+    }
+    .btn{
+        width: 255px;
+    }
+}

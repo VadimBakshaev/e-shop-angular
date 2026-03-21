@@ -1,0 +1,61 @@
+@use 'global' as *;
+
+.catalog-filter-body {
+    padding: 16px;
+    display: none;
+    flex-direction: column;
+    gap: 27px;
+}
+
+.catalog-filter {
+    border: 1px solid #b6d5b9;
+    border-radius: 5px;    
+
+    &.open {
+        .catalog-filter-head svg{
+            transform: rotate(180deg);
+        }
+        .catalog-filter-body {
+            display: flex;
+        }
+    }
+}
+
+
+
+input.small-input::-webkit-outer-spin-button,
+input.small-input::-webkit-inner-spin-button {
+
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+// input[type='number'].small-input {
+//     -moz-appearance: textfield;
+// }
+
+
+
+.catalog-filter-head {
+    background-color: #b6d5b9;
+    font-size: 16px;
+    color: $gray-text-color;
+    padding: 12px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+}
+
+.catalog-filter-checkbox {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.catalog-filter-from-to {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}

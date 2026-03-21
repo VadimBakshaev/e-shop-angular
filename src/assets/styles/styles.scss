@@ -1,0 +1,187 @@
+// Include theming for Angular Material with `mat.theme()`.
+// This Sass mixin will define CSS variables that are used for styling Angular Material
+// components according to the Material 3 design spec.
+// Learn more about theming and how to use it for your application's
+// custom components at https://material.angular.dev/guide/theming
+@use '@angular/material'as mat;
+@use 'global'as *;
+
+html {
+    height: 100%;
+    @include mat.theme((color: (primary: mat.$azure-palette,
+                tertiary: mat.$blue-palette,
+            ),
+            density: 0,
+        ));
+    @include mat.dialog-overrides((container-max-width: 800px,
+        ));
+    @include mat.progress-spinner-overrides((active-indicator-color: #2a592e,
+        ));
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+}
+
+.container {
+    max-width: $container-width;
+    margin: 0 auto;
+}
+
+.input {
+    box-sizing: border-box;
+    padding: 17px 20px;
+    border: 2px solid #2a592e;
+    border-radius: 5px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    color: $gray-text-color;
+}
+
+.small-input {
+    border: 1px solid #6cac72;
+    border-radius: 5px;
+    width: 40px;
+    height: 28px;
+    padding: 2px;
+    box-sizing: border-box;
+    font-size: 18px;
+    color: $green-text-color;
+    text-align: center;
+}
+
+.btn {
+    text-align: center;
+    padding: 15px;
+    border-radius: 5px;
+    background-color: #456f49;
+    box-sizing: border-box;
+    border: 0;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    color: white;
+    cursor: pointer;
+
+    &:disabled {
+        background-color: gray;
+        cursor: not-allowed;
+    }
+}
+
+a.btn {
+    display: inline-block;
+    text-decoration: none;
+}
+
+.btn-transparent {
+    border: 1px solid #6cac72;
+    background-color: transparent;
+}
+
+.mat-mdc-menu-item-text {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+
+    a {
+        text-decoration: none;
+        color: $gray-text-color;
+    }
+}
+
+.carousel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 50px;
+}
+
+.carousel-title {
+    @include head-lora-green(32px);
+}
+
+.carousel-arrows {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+
+    a {
+        cursor: pointer;
+    }
+}
+
+.personal-title {
+    @include head-lora-green(32px);
+    margin-bottom: 30px;
+}
+
+.personal-page-selector {
+    margin-bottom: 50px;
+    @include head-lora-green(26px);
+    display: flex;
+    align-items: center;
+
+    .personal-page {
+        padding: 13px 15px;
+        border-bottom: 2px solid #b6d5b9;
+        cursor: pointer;
+
+        &.active {
+            border-bottom: 3px solid #519057;
+        }
+    }
+}
+
+input[type="radio"] {
+    visibility: hidden;
+    position: relative;
+    width: 18px;
+    height: 18px;
+
+    &:before {
+        color: transparent;
+        content: '\e837';
+        font-family: 'Material Icons';
+        font-size: 19px;
+        position: absolute;
+        transition: 0.1s ease-in;
+        visibility: visible;
+        z-index: 3;
+
+    }
+
+    &:after {
+        background: white;
+        border-radius: 50%;
+        border: 2px solid #2a592e;
+        color: transparent;
+        content: '\e837';
+        font-family: 'Material Icons';
+        height: 12px;
+        position: absolute;
+        transition: 0.1s ease-in;
+        width: 12px;
+        visibility: visible;
+        z-index: 1;
+        top: 1px;
+        left: 1px;
+    }
+
+    &:checked {
+        &:after {
+            border-color: transparent;
+        }
+
+        &:before {
+            color: #2a592e;
+        }
+    }
+}

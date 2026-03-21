@@ -1,0 +1,102 @@
+@use 'global'as *;
+
+.data-form {
+    max-width: 646px;
+}
+
+.data-form-block {
+    margin-bottom: 30px;
+}
+
+.data-form-label {
+    margin-bottom: 20px;
+    font-weight: 500;
+    color: $gray-text-color;
+}
+
+.data-form-label-additional {
+    color: $gray-text-color;
+    line-height: 130%;
+    margin-bottom: 20px;
+    max-width: 528px;
+}
+
+.data-form-types {
+    display: flex;
+    width: 340px;
+    border: 1px solid #519057;
+    border-radius: 3px;
+    font-size: 18px;
+    color: $gray-text-color;
+    text-align: center;
+    cursor: pointer;
+
+    div {
+        padding: 14px;
+        width: 100%;
+    }
+
+    .active {
+        color: white;
+        background-color: #519057;
+
+    }
+
+}
+
+.data-form-inputs {
+    display: grid;
+    gap: 8px;
+
+    input {
+        border: 1.50px solid #2a592e;
+        border-radius: 3px;
+        padding: 18px;
+        color: $gray-text-color;
+
+        &::placeholder {
+            font-size: 14px;
+            color: #a8aba7;
+        }
+    }
+
+    &.personal-data-inputs {
+        grid-template-columns: repeat(3, 210px);
+    }
+
+    &.address-inputs {
+        max-width: 428px;
+        grid-template: auto auto/ 125px 125px 162px;
+
+        :first-child {
+            grid-column: 1/4;
+            grid-row: 1;
+        }
+    }
+
+}
+
+.data-form-radio-block {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+
+    :last-child {
+        margin-bottom: 0;
+    }
+
+    label {
+        color: $gray-text-color;
+        cursor: pointer;
+    }
+
+    input {
+        cursor: pointer;
+    }
+
+    input:checked+label {
+        font-weight: 500;
+    }
+}

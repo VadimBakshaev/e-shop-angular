@@ -1,0 +1,141 @@
+@use 'global'as *;
+
+.detail {
+    padding-top: 100px;
+    padding-bottom: 110px;
+}
+
+.detail-title {
+    @include head-lora-black(36px);
+}
+
+.detail-product {
+    display: flex;
+    padding-top: 30px;
+    padding-bottom: 120px;
+    justify-content: space-between;
+    gap: 107px;
+}
+
+.detail-image {
+    width: 528px;
+    height: 528px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    background-size: cover;
+    background-position: center;
+}
+
+.detail-info {
+    flex: 1;
+}
+
+.detail-info-items {
+    margin-bottom: 30px;
+}
+
+.detail-info-item {
+    padding-block: 20px;
+    border-top: 1px solid #e7f1e8;
+    display: flex;
+    gap: 22px;
+
+    &:first-child {
+        padding-top: 0;
+        border-top: 0;
+    }
+}
+
+.detail-info-item-title {
+    margin-bottom: 15px;
+    font-weight: 500;
+    font-size: 20px;
+    color: $green-text-color;
+}
+
+.detail-info-item-description {
+    font-size: 16px;
+    line-height: 130%;
+    color: $gray-text-color;
+}
+
+.detail-info-param {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.detail-info-param-name {
+    font-weight: 500;
+    font-size: 16px;
+    color: $green-text-color;
+}
+
+.detail-info-param-data {
+    font-size: 16px;
+    color: $gray-text-color;
+}
+
+.detail-info-params {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.detail-info-params-count {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+
+    span {
+        font-weight: 500;
+        font-size: 16px;
+        color: $green-text-color;
+    }
+}
+
+.detail-info-params-price {
+    font-weight: 700;
+    font-size: 40px;
+    color: #313131;
+}
+
+.detail-info-actions {
+    margin-top: 22px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .btn {
+        font-size: 18px;
+        width: 100%;
+        cursor: pointer;
+
+
+        &.btn-transparent {
+            color: $green-text-color;
+
+            .remove {
+                display: none;
+            }
+        }
+
+        &.btn-transparent:hover {
+            .incart {
+                display: none;
+            }
+
+            .remove {
+                display: inline;
+            }
+        }
+    }
+}
+
+.btn-icon {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    justify-content: center;
+}
