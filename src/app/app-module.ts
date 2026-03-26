@@ -11,7 +11,7 @@ import { MAT_SNACK_BAR_DEFAULT_OPTIONS, MatSnackBarModule } from '@angular/mater
 import { MatMenuModule } from '@angular/material/menu';
 import { SharedModule } from "./shared/shared-module";
 import { CarouselModule } from 'ngx-owl-carousel-o';
-import { HTTP_INTERCEPTORS, HttpClient, provideHttpClient, withInterceptors, withInterceptorsFromDi } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { AuthInterceptor } from './core/auth/auth-interceptor';
 import { ReactiveFormsModule } from '@angular/forms';
 

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { OwlOptions } from 'ngx-owl-carousel-o';
 import { ProductType } from '../../../../types/product.type';
 import { ProductService } from '../../../shared/services/product';
@@ -11,6 +11,8 @@ import { FavoriteType } from '../../../../types/favorite.type';
 import { DefaultResponseType } from '../../../../types/default-response.type';
 import { AuthService } from '../../../core/auth/auth';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { Observable, map, catchError, of, combineLatest, switchMap, debounceTime } from 'rxjs';
 
 @Component({
   selector: 'app-detail',
@@ -24,14 +26,15 @@ export class DetailComponent {
   private readonly cartService = inject(CartService);
   private readonly favoriteService = inject(FavoriteService);
   private readonly authService = inject(AuthService);
-  private readonly _snackBar = inject(MatSnackBar);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly destroyRef: DestroyRef = inject(DestroyRef);
 
   protected count: number = 1;
-  protected readonly serverPath: string = environment.serverStaticPath;
   protected isInCart = signal<boolean>(false);
-  protected products = signal<ProductType[]>([]);
   protected product = signal<ProductType | null>(null);
-  protected customOptions: OwlOptions = {
+  protected readonly products = toSignal(this.productService.getBestProducts(), { initialValue: [] });
+  protected readonly serverPath: string = environment.serverStaticPath;
+  protected readonly customOptions: OwlOptions = {
     loop: true,
     mouseDrag: false,
     touchDrag: false,
@@ -58,109 +61,180 @@ export class DetailComponent {
   }
 
   constructor() {
-    this.productService.getBestProducts()
-      .subscribe((data: ProductType[]) => {
-        this.products.set(data);
-      });
+    this.activatedRoute.params.pipe(
+      takeUntilDestroyed(),
+      switchMap(params => {
+        if (params['url']) this.detailInit(params['url']);
+        return of(void 0);
+      }),
+      catchError(error => {
+        console.error('Error loading product:', error);
+        this.snackBar.open('Ошибка загрузки товара');
+        return of(null);
+      })
+    ).subscribe()
+  }
 
+  private detailInit(url: string): void {
+    combineLatest({
+      product: this.loadProductHandle(url),
+      cart: this.loadCartHandle(),
+      isLoggedIn: of(this.authService.getIsLoggedIn())
+    }).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      switchMap(({ product, cart, isLoggedIn }) => {
 
-    this.activatedRoute.paramMap.subscribe((data) => {
-      const param: string | null = data.get('url');
-      if (param)
-        this.productService.getProduct(param)
-          .subscribe((data: ProductType) => {
-            this.product.set(data);
+        if (isLoggedIn) {
+          return this.loadFavoritesHandle().pipe(
+            map(favorites => ({ product, cart, favorites }))
+          )
+        }
 
-            this.cartService.getCart()
-              .subscribe((cartData: CartType | DefaultResponseType) => {
-                if ((cartData as DefaultResponseType).error !== undefined) throw new Error((cartData as DefaultResponseType).message);
-
-                if (cartData) {
-                  const productInCart = (cartData as CartType).items.find(item => item.product.id === data.id);
-                  if (productInCart) {
-                    this.product.update(current => current ? { ...current, countInCart: productInCart.quantity } : null);
-                    //data.countInCart = productInCart.quantity;
-                    this.count = productInCart.quantity;
-                    this.isInCart.set(true);
-                  }
-                }
-              });
-
-            if (this.authService.getIsLoggedIn()) {
-              this.favoriteService.getFavorites()
-                .subscribe({
-                  next: (favoriteData: FavoriteType[] | DefaultResponseType) => {
-                    if (this.isErrorResponse(favoriteData)) {
-                      throw new Error(favoriteData.message);
-                    } else {
-                      const currentProductExists: FavoriteType | undefined = favoriteData.find(item => item.id === this.product()?.id);
-                      if (currentProductExists) this.product.update(current => current ? { ...current, isInFavorite: true } : null);
-                    }
-                  },
-                  error: (error) => {
-                    console.log(error);
-                  }
-                })
-            };
-          })
+        return of({ product, cart, favorites: null })
+      })
+    ).subscribe({
+      next: ({ product, cart, favorites }) => {
+        if (product && cart) {
+          const productInCart = cart.items.find(item => item.product.id === product.id);
+          if (productInCart) {
+            product.countInCart = productInCart.quantity;
+            this.count = productInCart.quantity;
+            this.isInCart.set(true);
+          }
+        }
+        if (product && favorites) {
+          const currentProductExists: FavoriteType | undefined = favorites.find(item => item.id === product.id);
+          if (currentProductExists) product.isInFavorite = true;
+        }
+        this.product.set(product);
+      }
     })
   }
 
-  protected updateCount(value: number) {
-    this.count = value;
-    const product = this.product();
-    if (product && product.countInCart) {
-      this.cartService.updateCart(product.id, this.count)
-        .subscribe((data: CartType | DefaultResponseType) => {
-          this.isInCart.set(true);
-        });
-    }
-  }
-
-  protected addToCart() {
-    this.cartService.updateCart(this.product()!.id, this.count)
-      .subscribe((data: CartType | DefaultResponseType) => {
-        this.product.update(current => current ? { ...current, countInCart: this.count } : null);
-        this.isInCart.set(true);
-      });
-  }
-
-  protected remove() {
-    this.cartService.updateCart(this.product()!.id, 0)
-      .subscribe((data: CartType | DefaultResponseType) => {
-        this.isInCart.set(false);
-        this.count = 1;
-      });
-  }
-
-  protected addToFavorite() {
-    if (!this.authService.getIsLoggedIn()) {
-      this._snackBar.open('Для добавление в избранное необходимо авторизоваться');
-      return;
-    }
-    this.favoriteService.addFavorite(this.product()!.id)
-      .subscribe((data: FavoriteType | DefaultResponseType) => {
-        if ((data as DefaultResponseType).error !== undefined) {
-          throw new Error((data as DefaultResponseType).message);
+  private loadProductHandle(url: string): Observable<ProductType | null> {
+    return this.productService.getProduct(url).pipe(
+      map(respnse => {
+        if (this.isErrorResponse(respnse)) {
+          console.error(respnse.message);
+          return null;
         };
-        this.product.update(current => current ? { ...current, isInFavorite: true } : null);
+        return respnse as ProductType;
+      }),
+      catchError(error => {
+        console.error('Network error loading product:', error);
+        return of(null);
       })
+    )
   }
-
-  protected removeFromFavorite() {
-    this.favoriteService.removeFavorite(this.product()!.id).subscribe(
-      (data: DefaultResponseType) => {
-        if (data.error) {
-          console.error(data.message);
-        } else {
-          console.log(data.message);
-          this.product.update(current => current ? { ...current, isInFavorite: false } : null);
-        }
-      }
+  private loadCartHandle(): Observable<CartType | null> {
+    return this.cartService.getCart().pipe(
+      map(respnse => {
+        if (this.isErrorResponse(respnse)) {
+          console.error(respnse.message);
+          return null;
+        };
+        return respnse as CartType;
+      }),
+      catchError(error => {
+        console.error('Network error loading cart:', error);
+        return of(null);
+      })
     )
   }
 
-  private isErrorResponse(data: any): data is DefaultResponseType {
-    return data && typeof data === 'object' && 'error' in data;
+  private loadFavoritesHandle(): Observable<FavoriteType[] | null> {
+    return this.favoriteService.getFavorites().pipe(
+      map(respnse => {
+        if (this.isErrorResponse(respnse)) {
+          console.error(respnse.message);
+          return null;
+        };
+        return respnse as FavoriteType[];
+      }),
+      catchError(error => {
+        console.error('Network error loading favorites:', error);
+        return of(null);
+      })
+    )
+  }
+
+  protected updateCount(value: number): void {
+    const product = this.product();
+    if (!product?.id) return;
+    this.count = value;
+    if (product && product.countInCart) {
+      this.updateCartQuantity(product.id, value);
+      this.isInCart.set(true);
+    }
+  }
+
+  protected addToCart(): void {
+    const product = this.product();
+    if (!product?.id) return;
+    this.updateCartQuantity(product.id, this.count);
+    this.isInCart.set(true);
+  }
+
+  protected removeFromCart(): void {
+    const product = this.product();
+    if (!product?.id) return;
+    this.updateCartQuantity(product.id, 0);
+    this.isInCart.set(false);
+  }
+
+  private updateCartQuantity(productId: string, quantity: number): void {
+    this.cartService.updateCart(productId, quantity).pipe(
+      debounceTime(500),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(response => {
+      if (this.isErrorResponse(response)) {
+        this.snackBar.open(response.message);
+        return;
+      }
+      if (quantity === 0) {
+        this.count = 1;
+      }
+      this.product.update(current =>
+        current ? { ...current, countInCart: quantity } : null
+      );
+    });
+  }
+
+  protected toggleFavorite(): void {
+    const product = this.product();
+    if (!product?.id) return;
+
+    if (!this.authService.getIsLoggedIn()) {
+      this.snackBar.open('Для добавления в избранное необходимо авторизоваться');
+      return;
+    }
+
+    const request$ = product.isInFavorite
+      ? this.favoriteService.removeFavorite(product.id)
+      : this.favoriteService.addFavorite(product.id);
+
+    request$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(response => {
+      if (this.isErrorResponse(response)) {
+        this.snackBar.open(response.message);
+        return;
+      }
+
+      this.product.update(current =>
+        current ? { ...current, isInFavorite: !current.isInFavorite } : null
+      );
+
+      const message = product.isInFavorite
+        ? 'Товар удален из избранного'
+        : 'Товар добавлен в избранное';
+      this.snackBar.open(message);
+    });
+  }
+
+  private isErrorResponse<T>(response: T | DefaultResponseType): response is DefaultResponseType {
+    return response &&
+      typeof response === 'object' &&
+      'error' in response &&
+      response.error === true &&
+      'message' in response;
   }
 }

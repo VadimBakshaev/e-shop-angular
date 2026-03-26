@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { AuthService } from '../../../core/auth/auth';
 import { LoginResponseType } from '../../../../types/login-response.type';
@@ -6,6 +6,7 @@ import { DefaultResponseType } from '../../../../types/default-response.type';
 import { HttpErrorResponse } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-login',
@@ -18,6 +19,7 @@ export class LoginComponent {
   private readonly authService = inject(AuthService);
   private readonly _snackBar = inject(MatSnackBar);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected loginForm = this.fb.group({
     email: ['', [Validators.email, Validators.required]],
@@ -32,6 +34,7 @@ export class LoginComponent {
   protected login(): void {
     if (this.loginForm.valid && this.loginForm.value.email && this.loginForm.value.password) {
       this.authService.login(this.loginForm.value.email, this.loginForm.value.password, !!this.loginForm.value.rememberMe)
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (data: LoginResponseType | DefaultResponseType) => {
             let error: string | null = null;

@@ -1,19 +1,20 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { ProductService } from '../../../shared/services/product';
-import { ProductType } from '../../../../types/product.type';
+import { ProductType, ResponseProductType } from '../../../../types/product.type';
 import { CategoryService } from '../../../shared/services/category';
 import { CategoryWithType } from '../../../../types/category.type';
 import { ActivatedRoute, Params } from '@angular/router';
 import { ActiveParamsType } from '../../../../types/active-params.type';
 import { AppliedFilterType } from '../../../../types/applied-filter.type';
 import { ActiveFilterService } from '../../../shared/services/active-filter-service';
-import { debounceTime, Subscription } from 'rxjs';
+import { catchError, combineLatest, debounceTime, map, Observable, of, switchMap } from 'rxjs';
 import { CartService } from '../../../shared/services/cart-service';
-import { CartItems, CartType } from '../../../../types/cart.type';
+import { CartType } from '../../../../types/cart.type';
 import { FavoriteService } from '../../../shared/services/favorite-service';
 import { DefaultResponseType } from '../../../../types/default-response.type';
 import { FavoriteType } from '../../../../types/favorite.type';
 import { AuthService } from '../../../core/auth/auth';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-catalog',
@@ -21,7 +22,7 @@ import { AuthService } from '../../../core/auth/auth';
   templateUrl: './catalog.html',
   styleUrl: './catalog.scss',
 })
-export class CatalogComponent implements OnInit {
+export class CatalogComponent {
   private readonly productService = inject(ProductService);
   private readonly categoryService = inject(CategoryService);
   private readonly activatedRoute = inject(ActivatedRoute);
@@ -30,7 +31,6 @@ export class CatalogComponent implements OnInit {
   private readonly favoriteService = inject(FavoriteService);
   private readonly authService = inject(AuthService);
   private readonly destroyRef: DestroyRef = inject(DestroyRef);
-  private currentParams: Params = { ...this.activatedRoute.snapshot.queryParams };
 
   protected activeParams: ActiveParamsType = { types: [] };
   protected products = signal<ProductType[]>([]);
@@ -38,7 +38,7 @@ export class CatalogComponent implements OnInit {
   protected appliedFilters = signal<AppliedFilterType[]>([]);
   protected cart = signal<CartType | null>(null);
   protected open = signal<boolean>(false);
-  protected sortingOptions: { name: string, value: string }[] = [
+  protected readonly sortingOptions: { name: string, value: string }[] = [
     { name: 'От А до Я', value: 'az-asc' },
     { name: 'От Я до А', value: 'az-desc' },
     { name: 'По возрастанию цены', value: 'price-asc' },
@@ -48,89 +48,178 @@ export class CatalogComponent implements OnInit {
   protected favoriteProducts: FavoriteType[] | null = null;
 
   constructor() {
-    this.cartService.getCart()
-      .subscribe((data: CartType | DefaultResponseType) => {
-        if ((data as DefaultResponseType).error !== undefined) throw new Error((data as DefaultResponseType).message);
-        this.cart.set(data as CartType);
-        if (this.authService.getIsLoggedIn()) {
-          this.favoriteService.getFavorites()
-            .subscribe({
-              next: (favoritesData: FavoriteType[] | DefaultResponseType) => {
-                if ((favoritesData as DefaultResponseType).error !== undefined) {
-                  this.processCatalog();
-                  throw new Error((favoritesData as DefaultResponseType).message);
-                };
-                this.favoriteProducts = favoritesData as FavoriteType[];
-                this.processCatalog();
-              },
-              error: (error) => {
-                this.processCatalog();
-              }
-            });
-        } else {
-          this.processCatalog();
+    this.catalogInit();
+  }
+
+  private catalogInit(): void {
+    const initialData$ = combineLatest({
+      cart: this.loadCartHandle(),
+      categories: this.loadCategoriesHandle(),
+      isLoggedIn: of(this.authService.getIsLoggedIn())
+    }).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      switchMap(({ cart, categories, isLoggedIn }) => {
+        this.cart.set(cart);
+        this.categoriesWithTypes.set(categories);
+
+        if (isLoggedIn) {
+          return this.loadFavoritesHandle().pipe(
+            map(favorites => ({ categories, cart, favorites }))
+          )
+        };
+
+        return of({ categories, cart, favorites: null });
+      })
+    );
+
+    initialData$.subscribe({
+      next: ({ favorites }) => {
+        this.favoriteProducts = favorites;
+        this.filtersInit();
+        this.processCatalog();
+      },
+      error: (error) => {
+        console.error('Error catalog init', error);
+      }
+    })
+  }
+
+  private loadCartHandle(): Observable<CartType | null> {
+    return this.cartService.getCart().pipe(
+      map(respnse => {
+        if (this.isErrorResponse(respnse)) {
+          console.error(respnse.message);
+          return null;
+        };
+        return respnse as CartType;
+      }),
+      catchError(error => {
+        console.error('Network error loading cart:', error);
+        return of(null);
+      })
+    )
+  }
+
+  private loadFavoritesHandle(): Observable<FavoriteType[] | null> {
+    return this.favoriteService.getFavorites().pipe(
+      map(respnse => {
+        if (this.isErrorResponse(respnse)) {
+          console.error(respnse.message);
+          return null;
+        };
+        return respnse as FavoriteType[];
+      }),
+      catchError(error => {
+        console.error('Network error loading favorites:', error);
+        return of(null);
+      })
+    )
+  }
+
+  private loadCategoriesHandle(): Observable<CategoryWithType[]> {
+    return this.categoryService.getCategoriesWithTypes().pipe(
+      map(respnse => {
+        if (this.isErrorResponse(respnse)) {
+          console.error(respnse.message);
+          return [];
+        };
+        return respnse as CategoryWithType[];
+      }),
+      catchError(error => {
+        console.error('Network error loading categories:', error);
+        return of([]);
+      })
+    )
+  }
+
+  private isErrorResponse<T>(response: T | DefaultResponseType): response is DefaultResponseType {
+    return response &&
+      typeof response === 'object' &&
+      'error' in response &&
+      response.error === true &&
+      'message' in response;
+  }
+
+  private filtersInit(): void {
+    const currentParams = this.activatedRoute.snapshot.queryParams;
+
+    if (currentParams['types'] || this.hasRangeParams(currentParams)) {
+      this.activeParams = {
+        ...this.activeParams,
+        page: 1,
+        ...currentParams
+      };
+      this.activeFilterService.setActiveFilter(this.activeParams);
+      this.setAppliedFilter();
+    }
+  }
+
+  private hasRangeParams(params: Params): boolean {
+    const rangeParams = ['heightFrom', 'heightTo', 'diameterFrom', 'diameterTo'];
+    return rangeParams.some(param => param in params);
+  }
+
+  private processCatalog(): void {
+    this.activeFilterService.activeFilter$
+      .pipe(
+        debounceTime(500),
+        takeUntilDestroyed(this.destroyRef),
+        switchMap(params => this.loadProductsHandle(params))
+      ).subscribe({
+        next: (products) => {
+          this.products.set(products);
+        },
+        error: (error) => {
+          console.error('Failed to load products:', error);
+          this.products.set([]);
         }
       })
+  }
 
+  private loadProductsHandle(params: ActiveParamsType): Observable<ProductType[]> {
+    this.activeParams = params;
+    this.setAppliedFilter();
 
-    this.categoryService.getCategoriesWithTypes()
-      .subscribe((data: CategoryWithType[]) => {
-        console.log(data);
-        this.categoriesWithTypes.set(data);
+    return this.productService.getProducts(params).pipe(
+      map(response => this.handleProductsResponse(response)),
+      catchError(error => {
+        console.error('Network error while loading products:', error);
+        return of([]);
+      })
+    );
+  }
 
-        if (this.currentParams['types']) {
-          this.activeParams.page = 1;
-          this.activeFilterService.setActiveFilter(this.currentParams);
-          this.setAppliedFilter();
+  private handleProductsResponse(response: ResponseProductType | DefaultResponseType): ProductType[] {
+    if (this.isErrorResponse(response)) {
+      console.error('Products API returned error:', response.message);
+      return [];
+    }
+    this.pages = [];
+    for (let i = 1; i <= response.pages; i++) {
+      this.pages.push(i);
+    };
+
+    return this.setProductsWithCartAndFavorites(response.items as ProductType[]);
+  }
+
+  private setProductsWithCartAndFavorites(products: ProductType[]): ProductType[] {
+    const cart = this.cart();
+    const favorites = this.favoriteProducts;
+
+    return products.map(product => {
+      const settedProduct = { ...product };
+      if (cart?.items) {
+        const cartItem = cart.items.find(item => item.product.id === product.id);
+        if (cartItem) {
+          settedProduct.countInCart = cartItem.quantity;
         }
-      });
+      };
+      if (favorites) {
+        settedProduct.isInFavorite = favorites.some(fav => fav.id === product.id);
+      };
 
-    // this.destroyRef.onDestroy(() => {
-    //   subscription.unsubscribe();
-    // });
-  }
-
-  public ngOnInit(): void {
-
-  }
-
-  private processCatalog() {
-    this.activeFilterService.activeFilter$
-      .pipe(debounceTime(500))
-      .subscribe((params) => {
-        console.log('Компонент получил новые фильтры:', params);
-        this.activeParams = params;
-        this.setAppliedFilter();
-        this.productService.getProducts(this.activeParams)
-          .subscribe((data) => {
-            this.pages = [];
-            for (let i = 1; i <= data.pages; i++) {
-              this.pages.push(i);
-            };
-
-            if (this.cart() && this.cart()!.items.length > 0) {
-              data.items.map((product: ProductType) => {
-                const productInCart: CartItems | undefined = this.cart()?.items.find(item => item.product.id === product.id);
-                if (productInCart) {
-                  product.countInCart = productInCart.quantity;
-                }
-                return product;
-              })
-            };
-
-            if (this.favoriteProducts) {
-              data.items.map(product => {
-                const productInFavorite: FavoriteType | undefined = this.favoriteProducts?.find(item => item.id === product.id);
-                if (productInFavorite) {
-                  product.isInFavorite = true;
-                }
-                return product;
-              })
-            };
-            this.products.set(data.items);
-            console.log('data in catalog',data.items);
-          });
-      });
+      return settedProduct;
+    });
   }
 
   private setAppliedFilter(): void {
@@ -172,7 +261,7 @@ export class CatalogComponent implements OnInit {
     };
   }
 
-  protected removeAppliedFilter(filter: AppliedFilterType) {
+  protected removeAppliedFilter(filter: AppliedFilterType): void {
     if (filter.urlParam === 'heightFrom' ||
       filter.urlParam === 'heightTo' ||
       filter.urlParam === 'diameterFrom' ||
@@ -189,25 +278,25 @@ export class CatalogComponent implements OnInit {
     this.open.set(!this.open());
   }
 
-  protected sort(value: string) {
+  protected sort(value: string): void {
     this.activeParams.sort = value;
     this.activeParams.page = 1;
     this.activeFilterService.setActiveFilter(this.activeParams);
   }
 
-  protected openPage(page: number) {
+  protected openPage(page: number): void {
     this.activeParams.page = page;
     this.activeFilterService.setActiveFilter(this.activeParams);
   }
 
-  protected openPrevPage() {
+  protected openPrevPage(): void {
     if (this.activeParams.page && this.activeParams.page > 1) {
       this.activeParams.page--;
       this.activeFilterService.setActiveFilter(this.activeParams);
     }
   }
 
-  protected openNextPage() {
+  protected openNextPage(): void {
     if (this.activeParams.page && this.activeParams.page < this.pages.length) {
       this.activeParams.page++;
       this.activeFilterService.setActiveFilter(this.activeParams);

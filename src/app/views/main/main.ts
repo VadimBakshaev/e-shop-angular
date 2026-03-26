@@ -1,7 +1,9 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { ProductService } from '../../shared/services/product';
 import { ProductType } from '../../../types/product.type';
 import { OwlOptions } from 'ngx-owl-carousel-o';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { catchError, of } from 'rxjs';
 
 @Component({
   selector: 'app-main',
@@ -9,10 +11,19 @@ import { OwlOptions } from 'ngx-owl-carousel-o';
   templateUrl: './main.html',
   styleUrl: './main.scss',
 })
-export class MainComponent implements OnInit {
-  private readonly productService = inject(ProductService);
+export class MainComponent {
+  private readonly productService = inject(ProductService);  
 
-  protected products = signal<ProductType[]>([]);
+  protected products = toSignal(
+    this.productService.getBestProducts().pipe(
+      catchError(error => {
+        console.error('Failed to load best products:', error);
+        return of([]);
+      })
+    ),
+    { initialValue: [] as ProductType[] }
+  );
+  
   protected reviews = [
     {
       name: 'Ирина',
@@ -46,15 +57,20 @@ export class MainComponent implements OnInit {
     },
   ];
 
-  protected customOptions: OwlOptions = {
+  private baseOptions:OwlOptions = {
     loop: true,
     mouseDrag: false,
     touchDrag: false,
     pullDrag: false,
     dots: false,
-    margin: 24,
     navSpeed: 700,
     navText: ['', ''],
+    nav: false
+  }
+
+  protected customOptions: OwlOptions = {
+    ...this.baseOptions,
+    margin: 24,        
     responsive: {
       0: {
         items: 1
@@ -68,19 +84,12 @@ export class MainComponent implements OnInit {
       940: {
         items: 4
       }
-    },
-    nav: false
+    }   
   }
 
   protected reviewsOptions: OwlOptions = {
-    loop: true,
-    mouseDrag: false,
-    touchDrag: false,
-    pullDrag: false,
-    dots: false,
+    ...this.baseOptions,
     margin: 26,
-    navSpeed: 700,
-    navText: ['', ''],
     responsive: {
       0: {
         items: 1
@@ -90,15 +99,7 @@ export class MainComponent implements OnInit {
       },
       740: {
         items: 3
-      },      
-    },
-    nav: false
-  }
-
-  public ngOnInit(): void {
-    this.productService.getBestProducts()
-      .subscribe((data: ProductType[]) => {
-        this.products.set(data);
-      })
+      },
+    }    
   }
 }

@@ -15,10 +15,10 @@ export class ActiveFilterService {
 
   constructor() {
     this.updateFilter(this.activatedRoute.snapshot.queryParams);
-    this.activatedRoute.queryParams.subscribe(data => {
-      console.log('QueryParams изменились:', data);
-      this.updateFilter(data);
-    });
+    // this.activatedRoute.queryParams.subscribe(data => {
+    //   console.log('QueryParams изменились:', data);
+    //   this.updateFilter(data);
+    // });
   }
 
   private updateFilter(params: Params) {
@@ -36,6 +36,7 @@ export class ActiveFilterService {
   }
 
   public setActiveFilter(params: ActiveParamsType | Params) {
+    this.updateFilter(params);
     this.router.navigate(['/catalog'], {
       queryParams: params
     });

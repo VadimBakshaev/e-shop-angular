@@ -1,13 +1,15 @@
-import { Component, inject, input, Input, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, Input, OnInit, signal } from '@angular/core';
 import { ProductType } from '../../../../types/product.type';
 import { environment } from '../../../../environments/environment';
 import { CartService } from '../../services/cart-service';
-import { CartType } from '../../../../types/cart.type';
 import { AuthService } from '../../../core/auth/auth';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { FavoriteService } from '../../services/favorite-service';
 import { DefaultResponseType } from '../../../../types/default-response.type';
 import { FavoriteType } from '../../../../types/favorite.type';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { catchError, debounceTime, of } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'product-card',
@@ -18,22 +20,20 @@ import { FavoriteType } from '../../../../types/favorite.type';
 export class ProductCardComponent implements OnInit {
   @Input() product!: ProductType;
   @Input() isLight: boolean = false;
-
   @Input() countInCart: number | undefined = 0;
 
   private readonly cartService = inject(CartService);
   private readonly authService = inject(AuthService);
-  private readonly _snackBar = inject(MatSnackBar);
+  private readonly snackBar = inject(MatSnackBar);
   private readonly favoriteService = inject(FavoriteService);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly serverPath: string = environment.serverStaticPath;
-  //protected count = signal<number>(1);
   protected count: number = 1;
   protected isInCart = signal<boolean>(false);
   protected isInFavorite = signal<boolean>(false);
 
   public ngOnInit(): void {
-    console.log('ProductCardComponent activeted');
     if (this.countInCart) {
       this.count = this.countInCart;
       this.isInCart.set(true);
@@ -46,40 +46,53 @@ export class ProductCardComponent implements OnInit {
   protected updateCount(value: number) {
     this.count = value;
     if (this.countInCart) {
-      console.log('updateCount ', this.countInCart);
-      this.cartService.updateCart(this.product.id, this.count)
-        .subscribe((data: CartType | DefaultResponseType) => {
-          this.countInCart = this.count;
-          this.isInCart.set(true);
-        });
+      this.updeteCart(this.product.id, this.count);
     }
   }
 
   protected addToCart() {
-    this.cartService.updateCart(this.product.id, this.count)
-      .subscribe((data: CartType | DefaultResponseType) => {
-        this.countInCart = this.count;
-        this.isInCart.set(true);
-      });
+    this.updeteCart(this.product.id, this.count);
   }
 
-  protected remove() {
-    this.cartService.updateCart(this.product.id, 0)
-      .subscribe((data: CartType | DefaultResponseType) => {
-        this.countInCart = 0;
-        this.isInCart.set(false);
-        this.count = 1;
+  protected removeFromCart() {
+    this.updeteCart(this.product.id, 0);
+  }
+
+  private updeteCart(id: string, count: number) {
+    this.cartService.updateCart(id, count)
+      .pipe(
+        debounceTime(500),
+        takeUntilDestroyed(this.destroyRef),
+        catchError(error => {
+          this.handleError(error, 'Ошибка при обновлении корзины');
+          return of(null)
+        }))
+      .subscribe(() => {
+        if (count === 0) {
+          this.countInCart = 0;
+          this.isInCart.set(false);
+          this.count = 1;
+        } else {
+          this.countInCart = count;
+          this.isInCart.set(true);
+        }
       });
   }
 
   protected addToFavorite() {
     if (!this.authService.getIsLoggedIn()) {
-      this._snackBar.open('Для добавление в избранное необходимо авторизоваться');
+      this.snackBar.open('Для добавление в избранное необходимо авторизоваться');
       return;
     }
     this.favoriteService.addFavorite(this.product.id)
-      .subscribe((data: FavoriteType | DefaultResponseType) => {
-        if ((data as DefaultResponseType).error !== undefined) {
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        catchError(error => {
+          this.handleError(error, 'Ошибка при изменении избранного');
+          return of(null)
+        }))
+      .subscribe((data: FavoriteType | DefaultResponseType | null) => {
+        if (!data || (data as DefaultResponseType).error !== undefined) {
           throw new Error((data as DefaultResponseType).message);
         };
         this.product.isInFavorite = true;
@@ -88,17 +101,29 @@ export class ProductCardComponent implements OnInit {
   }
 
   protected removeFromFavorite() {
-
-    this.favoriteService.removeFavorite(this.product.id).subscribe(
-      (data: DefaultResponseType) => {
-        if (data.error) {
-          console.error(data.message);
-        } else {
-          console.log(data.message);
-          this.product.isInFavorite = false;
-          this.isInFavorite.set(false);
+    this.favoriteService.removeFavorite(this.product.id)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        catchError(error => {
+          this.handleError(error, 'Ошибка при изменении избранного');
+          return of(null)
+        })
+      )
+      .subscribe(
+        (data: DefaultResponseType | null) => {
+          if (!data || data.error) {
+            console.error(data ? data.message : 'error');
+          } else {
+            console.log(data.message);
+            this.product.isInFavorite = false;
+            this.isInFavorite.set(false);
+          }
         }
-      }
-    )
+      )
+  }
+
+  private handleError(error: HttpErrorResponse, message: string): void {
+    console.error(error);
+    this.snackBar.open(message);
   }
 }

@@ -16,7 +16,7 @@ import { CarouselModule } from 'ngx-owl-carousel-o';
   imports: [
     CommonModule,
     SharedModule,
-    CarouselModule,
+    CarouselModule,    
     ProductRoutingModule
   ]
 })

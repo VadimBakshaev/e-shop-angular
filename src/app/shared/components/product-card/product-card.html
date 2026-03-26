@@ -33,7 +33,7 @@
         <div class="product-card-price">{{product.price}} BYN</div>
         <div class="product-card-action">
             @if (isInCart()) {
-            <button class="btn btn-transparent" (click)="remove()">
+            <button class="btn btn-transparent" (click)="removeFromCart()">
                 <span class="incart">В корзине</span>
                 <span class="remove">Удалить</span>
             </button>

@@ -1,11 +1,12 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { OwlOptions } from 'ngx-owl-carousel-o';
-import { ProductType } from '../../../../types/product.type';
 import { ProductService } from '../../../shared/services/product';
 import { CartService } from '../../../shared/services/cart-service';
 import { CartType } from '../../../../types/cart.type';
 import { environment } from '../../../../environments/environment';
 import { DefaultResponseType } from '../../../../types/default-response.type';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { catchError, debounceTime, of } from 'rxjs';
 
 @Component({
   selector: 'app-cart',
@@ -16,12 +17,13 @@ import { DefaultResponseType } from '../../../../types/default-response.type';
 export class CartComponent {
   private readonly productService = inject(ProductService);
   private readonly cartService = inject(CartService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  protected extraProducts = signal<ProductType[]>([]);
   protected cart = signal<CartType | null>(null);
   protected readonly serverPath: string = environment.serverStaticPath;
   protected totalAmount: number = 0;
   protected totalCount: number = 0;
+  protected extraProducts = toSignal(this.productService.getBestProducts(), { initialValue: [] });  
 
   protected customOptions: OwlOptions = {
     loop: true,
@@ -50,16 +52,18 @@ export class CartComponent {
   }
 
   constructor() {
-    this.productService.getBestProducts()
-      .subscribe((data: ProductType[]) => {
-        this.extraProducts.set(data);
-      });
-
-    this.cartService.getCart().subscribe((data: CartType | DefaultResponseType) => {
-      if ((data as DefaultResponseType).error !== undefined) throw new Error((data as DefaultResponseType).message);
-      this.cart.set(data as CartType);
-      this.calculateTotal();
-    })
+    this.cartService.getCart()
+      .pipe(
+        takeUntilDestroyed(),
+        catchError(error => {
+          console.error(error);
+          return of(null);
+        }))
+      .subscribe((data: CartType | DefaultResponseType | null) => {
+        if (!data || (data as DefaultResponseType).error !== undefined) throw new Error((data as DefaultResponseType).message);
+        this.cart.set(data as CartType);
+        this.calculateTotal();
+      })
   }
 
   private calculateTotal() {
@@ -76,8 +80,15 @@ export class CartComponent {
   protected updateCount(id: string, value: number) {
     if (this.cart()) {
       this.cartService.updateCart(id, value)
-        .subscribe((data: CartType | DefaultResponseType) => {
-          if ((data as DefaultResponseType).error !== undefined) throw new Error((data as DefaultResponseType).message);
+        .pipe(
+          debounceTime(500),
+          takeUntilDestroyed(this.destroyRef),
+          catchError(error => {
+            console.error(error);
+            return of(null)
+          }))
+        .subscribe((data: CartType | DefaultResponseType | null) => {
+          if (!data || (data as DefaultResponseType).error !== undefined) throw new Error((data as DefaultResponseType).message);
           this.cart.set(data as CartType);
           this.calculateTotal();
         });

@@ -3,6 +3,8 @@ import { OrderService } from '../../../shared/services/order-service';
 import { OrderType } from '../../../../types/order.type';
 import { DefaultResponseType } from '../../../../types/default-response.type';
 import { OrderStatusUtil } from '../../../shared/utils/order-status.util';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { catchError, of } from 'rxjs';
 
 @Component({
   selector: 'app-orders',
@@ -17,8 +19,14 @@ export class OrdersComponent {
 
   constructor() {
     this.orderService.getOrders()
-      .subscribe((data: OrderType[] | DefaultResponseType) => {
-        if ((data as DefaultResponseType).error !== undefined) throw new Error((data as DefaultResponseType).message);
+      .pipe(
+        takeUntilDestroyed(),
+        catchError(error => {
+          console.error(error);
+          return of(null)
+        }))
+      .subscribe((data: OrderType[] | DefaultResponseType | null) => {
+        if (!data || (data as DefaultResponseType).error !== undefined) throw new Error((data as DefaultResponseType).message);
 
         this.orders.set((data as OrderType[]).map(item => {
           const status = OrderStatusUtil.getStatus(item.status);

@@ -10,15 +10,15 @@ export class OrderStatusUtil {
                 name = 'Доставка';
                 break;
             case OrderStatusType.cancelled:
-                name: 'Отменён';
-                color: '#ff7575';
+                name = 'Отменён';
+                color = '#ff7575';
                 break;
             case OrderStatusType.pending:
-                name: 'Обработка';
+                name = 'Обработка';
                 break;
             case OrderStatusType.success:
-                name: 'Выполнен';
-                color: '#b6d5b9'
+                name = 'Выполнен';
+                color = '#b6d5b9';
 
         }
 

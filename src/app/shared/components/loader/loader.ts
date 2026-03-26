@@ -1,5 +1,6 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { LoaderService } from '../../services/loader-service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'loader',
@@ -8,12 +9,13 @@ import { LoaderService } from '../../services/loader-service';
   styleUrl: './loader.scss',
 })
 export class LoaderComponent {
-  private readonly loaderService = inject(LoaderService);
+  private readonly loaderService = inject(LoaderService);  
 
-  protected isShowed=signal<boolean>(false);
+  protected isShowed = signal<boolean>(false);
 
   constructor() {
     this.loaderService.isShowed$
+      .pipe(takeUntilDestroyed())
       .subscribe((show: boolean) => {
         this.isShowed.set(show);
       })

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
@@ -6,6 +6,7 @@ import { AuthService } from '../../../core/auth/auth';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DefaultResponseType } from '../../../../types/default-response.type';
 import { LoginResponseType } from '../../../../types/login-response.type';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-signup',
@@ -18,6 +19,7 @@ export class SignupComponent {
   private readonly authService = inject(AuthService);
   private readonly _snackBar = inject(MatSnackBar);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected signupForm = this.fb.group({
     email: ['', [Validators.email, Validators.required]],
@@ -31,13 +33,14 @@ export class SignupComponent {
   protected get passwordRepeat() { return this.signupForm.get('passwordRepeat') };
   protected get agree() { return this.signupForm.get('agree') };
 
-  protected signup() {
+  protected signup(): void {
     if (
       this.signupForm.valid &&
       this.signupForm.value.email &&
       this.signupForm.value.password &&
       this.signupForm.value.passwordRepeat) {
       this.authService.signup(this.signupForm.value.email, this.signupForm.value.password, this.signupForm.value.passwordRepeat)
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (data: LoginResponseType | DefaultResponseType) => {
             let error: string | null = null;

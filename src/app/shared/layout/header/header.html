@@ -89,7 +89,7 @@
                     <nav>
                         <ul>
                             @for (category of categories(); track $index) {
-                            <li><a routerLink="/catalog" [queryParams]="{types: category?.urlTypes}">
+                            <li><a (click)="openFilter(category)">
                                     {{ category.name }}
                                 </a></li>
                             }

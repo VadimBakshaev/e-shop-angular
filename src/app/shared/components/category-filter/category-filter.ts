@@ -1,9 +1,8 @@
-import { Component, inject, Input, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, Input, OnInit, signal } from '@angular/core';
 import { CategoryWithType } from '../../../../types/category.type';
-import { ActivatedRoute, Router } from '@angular/router';
 import { ActiveParamsType } from '../../../../types/active-params.type';
-import { ActiveParamsUtil } from '../../utils/active-params.util';
 import { ActiveFilterService } from '../../services/active-filter-service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'category-filter',
@@ -12,9 +11,8 @@ import { ActiveFilterService } from '../../services/active-filter-service';
   styleUrl: './category-filter.scss',
 })
 export class CategoryFilterComponent implements OnInit {
-  private readonly router = inject(Router);
-  private readonly activatedRoute = inject(ActivatedRoute);
   private readonly activeFilterService = inject(ActiveFilterService);
+  private readonly destroyRef = inject(DestroyRef);
 
   @Input() category: CategoryWithType | null = null;
   @Input() type: string | null = null;
@@ -25,11 +23,12 @@ export class CategoryFilterComponent implements OnInit {
   protected to: number | null = null;
 
   public ngOnInit(): void {
-    console.log('CategoryFilterComponent activated');
-    this.activeFilterService.activeFilter$.subscribe(params => {
-      this.activeParams = params;
-      this.setActiveFilters(params);
-    })    
+    this.activeFilterService.activeFilter$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        this.activeParams = params;
+        this.setActiveFilters(params);
+      })
   }
 
   private setActiveFilters(params: ActiveParamsType): void {
@@ -55,7 +54,7 @@ export class CategoryFilterComponent implements OnInit {
     }
   }
 
-  protected toggleOpen() {
+  protected toggleOpen(): void {
     this.open.set(!this.open());
   }
 
@@ -72,7 +71,7 @@ export class CategoryFilterComponent implements OnInit {
     return '';
   }
 
-  protected updateFilterParam(url: string, checked: boolean) {
+  protected updateFilterParam(url: string, checked: boolean): void {
     if (this.activeParams.types.length > 0) {
       const existingTypeInParams: string | undefined = this.activeParams.types.find((type) => type === url);
       if (existingTypeInParams && !checked) {
@@ -87,7 +86,7 @@ export class CategoryFilterComponent implements OnInit {
     this.activeFilterService.setActiveFilter(this.activeParams);
   }
 
-  protected updateFilterParamFromTo(param: string, value: string) {
+  protected updateFilterParamFromTo(param: string, value: string): void {
     if (param === 'heightTo' || param === 'heightFrom' || param === 'diameterFrom' || param === 'diameterTo') {
       if (this.activeParams[param] && !value) {
         delete this.activeParams[param];
@@ -95,9 +94,6 @@ export class CategoryFilterComponent implements OnInit {
         this.activeParams[param] = value;
       }
       this.activeFilterService.setActiveFilter(this.activeParams);
-      // this.router.navigate(['/catalog'], {
-      //   queryParams: this.activeParams
-      // })
     }
   }
 }

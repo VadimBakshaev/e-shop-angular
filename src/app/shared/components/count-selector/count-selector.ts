@@ -10,18 +10,18 @@ export class CountSelectorComponent {
   @Input() count: number = 1;
   @Output() onCountChange: EventEmitter<number> = new EventEmitter<number>();
 
-  protected countChange() {    
+  protected countChange(): void {
     this.onCountChange.emit(+this.count);
   }
 
-  protected decreaseCount() {
+  protected decreaseCount(): void {
     if (this.count > 1) {
       this.count--;
       this.countChange();
     }
   }
 
-  protected increaseCount() {
+  protected increaseCount(): void {
     this.count++;
     this.countChange();
   }

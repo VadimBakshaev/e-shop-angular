@@ -17,3 +17,9 @@ export type ProductType = {
     countInCart?: number;
     isInFavorite?: boolean;
 }
+
+export type ResponseProductType = {
+    totalCount: number;
+    pages: number;
+    items: ProductType[];
+}
