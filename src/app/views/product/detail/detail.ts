@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { OwlOptions } from 'ngx-owl-carousel-o';
 import { ProductType } from '../../../../types/product.type';
 import { ProductService } from '../../../shared/services/product';
@@ -32,6 +32,7 @@ export class DetailComponent {
   protected count: number = 1;
   protected isInCart = signal<boolean>(false);
   protected product = signal<ProductType | null>(null);
+  protected readonly isLogged = toSignal(this.authService.isLogged$, { initialValue: false });
   protected readonly products = toSignal(this.productService.getBestProducts(), { initialValue: [] });
   protected readonly serverPath: string = environment.serverStaticPath;
   protected readonly customOptions: OwlOptions = {
@@ -126,6 +127,7 @@ export class DetailComponent {
       })
     )
   }
+  
   private loadCartHandle(): Observable<CartType | null> {
     return this.cartService.getCart().pipe(
       map(respnse => {

@@ -34,6 +34,7 @@
         </div>
     </div>
 </section>
+@if (products().length > 0) {
 <section class="best-products">
     <div class="container">
         <div class="carousel-header">
@@ -63,9 +64,10 @@
                 </ng-template>
                 }
             </owl-carousel-o>
+            
         </div>
     </div>
-</section>
+</section>}
 <section class="info" id="delivery">
     <div class="container">
         <div class="info-title">Доставка и оплата</div>

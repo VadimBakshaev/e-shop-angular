@@ -1,6 +1,6 @@
 @if (product) {
 <div class="product-card" [class.is-light]="isLight" [routerLink]="isLight ? ['/product/' + product.url] : null">
-    @if(!isLight){
+    @if(!isLight && isLogged()){
     @if(isInFavorite()){
     <div class="product-card-faworite" (click)="removeFromFavorite()">
         <span>

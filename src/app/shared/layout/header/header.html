@@ -52,6 +52,7 @@
                             <span (click)="logout()">Выйти</span>
                         </button>
                     </mat-menu>
+                    @if (isLogged()) {
                     <a routerLink="/favorite">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path
@@ -59,6 +60,7 @@
                                 fill="#202B21" />
                         </svg>
                     </a>
+                    }
                     <a routerLink="/cart">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path
@@ -97,8 +99,7 @@
                     </nav>
                 </div>
                 <div class="header-bottom-search">
-                    <input type="text" placeholder="Начните искать"
-                        [formControl]="searchField">
+                    <input type="text" placeholder="Начните искать" [formControl]="searchField">
                     @if ( showProducts() && products().length > 0 ) {
                     <div class="search-products">
                         @for (product of products(); track $index) {

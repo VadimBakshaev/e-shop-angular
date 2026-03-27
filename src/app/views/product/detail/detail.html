@@ -106,6 +106,7 @@
                     <div class="detail-info-params-price">{{product()?.price}} BYN</div>
                 </div>
                 <div class="detail-info-actions">
+                    @if (isLogged()) {
                     @if(product()?.isInFavorite){
                     <button class="btn btn-transparent btn-icon" (click)="toggleFavorite()">
                         <svg width="16" height="15" viewBox="0 0 16 15" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -124,7 +125,7 @@
                         </svg>
                         <span>В избранное</span>
                     </button>
-                    }
+                    }}
                     @if (isInCart()) {
                     <button class="btn btn-transparent" (click)="removeFromCart()">
                         <span class="incart">В корзине</span>
@@ -137,6 +138,7 @@
                 </div>
             </div>
         </div>
+        @if (products().length > 0) {
         <section class="recomended-products">
             <div class="carousel-header">
                 <div class="carousel-title">Рекомендуемые товары</div>
@@ -166,6 +168,6 @@
                     }
                 </owl-carousel-o>
             </div>
-        </section>
+        </section>}
     </div>
 </section>

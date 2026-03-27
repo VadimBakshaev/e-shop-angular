@@ -3,14 +3,23 @@
         <h2 class="favorite-title">Избранное</h2>
         @if(products().length>0){
         <div class="favorite-products">
-            @for (product of products(); track $index) {
+            @for (product of products(); track product.id) {
             <div class="favorite-product">
-                <div class="favorite-product-image" style="background-image: url('{{serverDefault + product.image}}');">
+                <div class="favorite-product-image" style="background-image: url('{{serverDefault + product.image}}');"
+                    routerLink="/product/{{product.url}}">
                 </div>
                 <div class="favorite-product-name">{{product.name}}</div>
                 <div class="favorite-product-price">{{product.price}} BYN</div>
+                <div class="favorite-product-count" [class.show]="product.isInCart">
+                    <count-selector [count]="product.quantity"
+                        (onCountChange)="updateCartQuantity(product.id, $event)"></count-selector>
+                </div>
                 <div class="favorite-product-action">
-                    <button class="btn" routerLink="/product/{{product.url}}">Открыть</button>
+                    @if (product.isInCart) {
+                    <button class="btn btn-transparent" (click)="updateCartQuantity(product.id, 0)">В корзине</button>
+                    } @else {
+                    <button class="btn" (click)="updateCartQuantity(product.id, 1)">В корзину</button>
+                    }
                 </div>
                 <div class="favorite-product-remove" (click)="removeFromFavorites(product.id)">
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">

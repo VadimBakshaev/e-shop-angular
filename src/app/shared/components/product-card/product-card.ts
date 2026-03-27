@@ -7,7 +7,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { FavoriteService } from '../../services/favorite-service';
 import { DefaultResponseType } from '../../../../types/default-response.type';
 import { FavoriteType } from '../../../../types/favorite.type';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, debounceTime, of } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 
@@ -32,6 +32,7 @@ export class ProductCardComponent implements OnInit {
   protected count: number = 1;
   protected isInCart = signal<boolean>(false);
   protected isInFavorite = signal<boolean>(false);
+  protected isLogged = toSignal(this.authService.isLogged$, { initialValue: false });
 
   public ngOnInit(): void {
     if (this.countInCart) {
@@ -80,7 +81,7 @@ export class ProductCardComponent implements OnInit {
   }
 
   protected addToFavorite() {
-    if (!this.authService.getIsLoggedIn()) {
+    if (!this.isLogged) {
       this.snackBar.open('Для добавление в избранное необходимо авторизоваться');
       return;
     }
